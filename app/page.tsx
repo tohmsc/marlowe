@@ -5,8 +5,6 @@ import { AsciiPanel } from "@/components/ascii-panel";
 
 export default function Home() {
   const [loaded, setLoaded] = useState(false);
-  const [isHoveringAccess, setIsHoveringAccess] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     // Trigger load animations
@@ -21,20 +19,13 @@ export default function Home() {
     <>
       {/* Mobile Layout - vertical stack */}
       <div className="md:hidden h-dvh bg-[#f5f4f0] overflow-hidden flex flex-col p-6">
-        {/* Top row: Request Access right */}
+        {/* Top row: Contact right */}
         <div className="flex justify-end items-center">
-          <button
-            onMouseEnter={() => setIsHoveringAccess(true)}
-            onMouseLeave={() => {
-              setIsHoveringAccess(false);
-              setCopied(false);
-            }}
-            onClick={() => {
-              navigator.clipboard.writeText("contact@askmarlowe.com");
-              setCopied(true);
-              window.location.href = "mailto:contact@askmarlowe.com";
-            }}
-            className={`font-[family-name:var(--font-inter)] text-sm text-zinc-900 hover:text-zinc-600 cursor-pointer relative w-24 text-right ${
+          <a
+            href="https://cal.com/lets-meet/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`font-[family-name:var(--font-inter)] text-sm text-zinc-900 hover:text-zinc-600 cursor-pointer ${
               loaded ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
             }`}
             style={{
@@ -44,28 +35,8 @@ export default function Home() {
               transitionDelay: loaded ? "0ms" : "400ms",
             }}
           >
-            <span
-              className={`transition-opacity duration-500 ease-out ${
-                isHoveringAccess || copied ? "opacity-0" : "opacity-100"
-              }`}
-            >
-              Request Access
-            </span>
-            <span
-              className={`absolute right-0 top-0 whitespace-nowrap transition-opacity duration-500 ease-out ${
-                isHoveringAccess && !copied ? "opacity-100" : "opacity-0"
-              }`}
-            >
-              contact@askmarlowe.com
-            </span>
-            <span
-              className={`absolute right-0 top-0 whitespace-nowrap transition-opacity duration-500 ease-out ${
-                copied ? "opacity-100" : "opacity-0"
-              }`}
-            >
-              Copied!
-            </span>
-          </button>
+            Contact
+          </a>
         </div>
 
         {/* Globe - centered, takes up middle space */}
@@ -103,20 +74,13 @@ export default function Home() {
 
       {/* Desktop Layout - absolute positioning */}
       <div className="hidden md:flex h-dvh bg-[#f5f4f0] overflow-hidden items-center justify-center p-12">
-        {/* Request Access - top right */}
+        {/* Contact - top right */}
         <div className="absolute top-12 right-12">
-          <button
-            onMouseEnter={() => setIsHoveringAccess(true)}
-            onMouseLeave={() => {
-              setIsHoveringAccess(false);
-              setCopied(false);
-            }}
-            onClick={() => {
-              navigator.clipboard.writeText("contact@askmarlowe.com");
-              setCopied(true);
-              window.location.href = "mailto:contact@askmarlowe.com";
-            }}
-            className={`font-[family-name:var(--font-inter)] text-sm text-zinc-900 hover:text-zinc-600 cursor-pointer relative ${
+          <a
+            href="https://cal.com/lets-meet/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`font-[family-name:var(--font-inter)] text-sm text-zinc-900 hover:text-zinc-600 cursor-pointer ${
               loaded ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
             }`}
             style={{
@@ -126,28 +90,8 @@ export default function Home() {
               transitionDelay: loaded ? "0ms" : "400ms",
             }}
           >
-            <span
-              className={`transition-opacity duration-500 ease-out ${
-                isHoveringAccess || copied ? "opacity-0" : "opacity-100"
-              }`}
-            >
-              Request Access
-            </span>
-            <span
-              className={`absolute right-0 top-0 whitespace-nowrap transition-opacity duration-500 ease-out ${
-                isHoveringAccess && !copied ? "opacity-100" : "opacity-0"
-              }`}
-            >
-              contact@askmarlowe.com
-            </span>
-            <span
-              className={`absolute right-0 top-0 whitespace-nowrap transition-opacity duration-500 ease-out ${
-                copied ? "opacity-100" : "opacity-0"
-              }`}
-            >
-              Copied!
-            </span>
-          </button>
+            Contact
+          </a>
         </div>
 
         {/* Globe - center */}
