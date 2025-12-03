@@ -88,7 +88,7 @@ export default function Home() {
             }`}
             style={{ transitionDelay: "600ms" }}
           >
-            Intelligent AI workspace for investment teams
+            AI teammates for investment teams
           </span>
           <span
             className={`font-[family-name:var(--font-inter)] text-sm text-zinc-900 transition-all duration-1200 ease-out ${
@@ -180,7 +180,7 @@ export default function Home() {
             }`}
             style={{ transitionDelay: "800ms" }}
           >
-            Marlowe is a private AI workspace for investment teams that builds and applies custom software agents to accelerate deal review and underwriting.
+            Marlowe is a private AI workspace for investment teams. Our agents learn and improve through use, training your firm's own digital teammates to augment deal review and underwriting.
           </span>
         </div>
 

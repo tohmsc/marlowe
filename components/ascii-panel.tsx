@@ -119,6 +119,13 @@ export function AsciiPanel({ version = 2 }: AsciiPanelProps) {
   // Store displacement state for each cell (for magnetic snap-back)
   const displacementRef = useRef<Float32Array | null>(null);
 
+  // Interactive spin state
+  const rotationRef = useRef<number>(0);
+  const velocityRef = useRef<number>(0.0016); // Base rotation speed (matches original time * 0.1 where dt=0.016)
+  const isDraggingRef = useRef<boolean>(false);
+  const lastDragXRef = useRef<number>(0);
+  const dragVelocitiesRef = useRef<number[]>([]);
+
   const cols = 100;
   const rows = 35;
   const charWidth = 10;
@@ -150,13 +157,13 @@ export function AsciiPanel({ version = 2 }: AsciiPanelProps) {
   }, [MAP_WIDTH, MAP_HEIGHT, WORLD_MAP]);
 
   const calculate3DGlobe = useCallback(
-    (x: number, y: number, time: number) => {
+    (x: number, y: number, rotation: number) => {
       const nx = (x / cols) * 2 - 1;
       const ny = (y / rows) * 2 - 1;
 
       const radiusX = 0.85;
       const radiusY = 0.75;
-      const rotationY = time * 0.1;
+      const rotationY = rotation;
 
       const normalizedX = nx / radiusX;
       const normalizedY = ny / radiusY;
@@ -216,28 +223,89 @@ export function AsciiPanel({ version = 2 }: AsciiPanelProps) {
     [cols, rows, isLand]
   );
 
-  // Handle mouse move
+  // Handle mouse/touch interactions for spinning
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const getClientX = (e: MouseEvent | TouchEvent): number => {
+      return 'touches' in e ? e.touches[0].clientX : e.clientX;
+    };
+
+    const handleStart = (e: MouseEvent | TouchEvent) => {
+      isDraggingRef.current = true;
+      lastDragXRef.current = getClientX(e);
+      dragVelocitiesRef.current = [];
+    };
+
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      // Update hover position for particle effect
       const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX - rect.left) / charWidth);
-      const y = Math.floor((e.clientY - rect.top) / charHeight);
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      const x = Math.floor((clientX - rect.left) / charWidth);
+      const y = Math.floor((clientY - rect.top) / charHeight);
       setMousePos({ x, y });
+
+      // Handle drag for spinning
+      if (isDraggingRef.current) {
+        const currentX = getClientX(e);
+        const deltaX = currentX - lastDragXRef.current;
+
+        // Convert pixel movement to rotation (scale factor for sensitivity)
+        const rotationDelta = deltaX * 0.003;
+
+        // Track velocity for momentum (store last few velocities for smoothing)
+        dragVelocitiesRef.current.push(rotationDelta);
+        if (dragVelocitiesRef.current.length > 5) {
+          dragVelocitiesRef.current.shift();
+        }
+
+        // Apply rotation directly while dragging
+        velocityRef.current = rotationDelta;
+
+        lastDragXRef.current = currentX;
+      }
+    };
+
+    const handleEnd = () => {
+      if (isDraggingRef.current) {
+        isDraggingRef.current = false;
+
+        // Calculate average velocity from recent movements for smooth momentum
+        const velocities = dragVelocitiesRef.current;
+        if (velocities.length > 0) {
+          const avgVelocity = velocities.reduce((a, b) => a + b, 0) / velocities.length;
+          // Boost the release velocity for more satisfying spin
+          velocityRef.current = avgVelocity * 2;
+        }
+      }
     };
 
     const handleMouseLeave = () => {
       setMousePos(null);
+      handleEnd();
     };
 
-    canvas.addEventListener("mousemove", handleMouseMove);
+    // Mouse events
+    canvas.addEventListener("mousedown", handleStart);
+    canvas.addEventListener("mousemove", handleMove);
+    canvas.addEventListener("mouseup", handleEnd);
     canvas.addEventListener("mouseleave", handleMouseLeave);
 
+    // Touch events
+    canvas.addEventListener("touchstart", handleStart, { passive: true });
+    canvas.addEventListener("touchmove", handleMove, { passive: true });
+    canvas.addEventListener("touchend", handleEnd);
+
     return () => {
-      canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("mousedown", handleStart);
+      canvas.removeEventListener("mousemove", handleMove);
+      canvas.removeEventListener("mouseup", handleEnd);
       canvas.removeEventListener("mouseleave", handleMouseLeave);
+      canvas.removeEventListener("touchstart", handleStart);
+      canvas.removeEventListener("touchmove", handleMove);
+      canvas.removeEventListener("touchend", handleEnd);
     };
   }, [charWidth, charHeight]);
 
@@ -255,7 +323,30 @@ export function AsciiPanel({ version = 2 }: AsciiPanelProps) {
 
     const animate = () => {
       timeRef.current += 0.016;
-      const time = timeRef.current;
+
+      // Apply velocity to rotation
+      rotationRef.current += velocityRef.current;
+
+      // Apply friction when not dragging (gradually return to base speed)
+      if (!isDraggingRef.current) {
+        const baseSpeed = 0.0016; // Original: time * 0.1 with dt=0.016
+        const friction = 0.98;
+        const returnStrength = 0.01;
+
+        // Apply friction to slow down
+        velocityRef.current *= friction;
+
+        // Gradually return to base speed
+        const diff = baseSpeed - velocityRef.current;
+        velocityRef.current += diff * returnStrength;
+
+        // Clamp very small velocities to base speed
+        if (Math.abs(velocityRef.current - baseSpeed) < 0.0005) {
+          velocityRef.current = baseSpeed;
+        }
+      }
+
+      const rotation = rotationRef.current;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -267,7 +358,7 @@ export function AsciiPanel({ version = 2 }: AsciiPanelProps) {
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
           const idx = (y * cols + x) * 2;
-          const value = calculate3DGlobe(x, y, time);
+          const value = calculate3DGlobe(x, y, rotation);
 
           if (value > 0.01) {
             // Calculate hover effect
