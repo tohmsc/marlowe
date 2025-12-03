@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { AsciiPanel } from "@/components/ascii-panel";
+import { WorkflowPanel } from "@/components/workflow-panel";
 
 export default function Home() {
   const [loaded, setLoaded] = useState(false);
+  const [showWorkflows, setShowWorkflows] = useState(false);
 
   useEffect(() => {
     // Trigger load animations
@@ -14,6 +16,10 @@ export default function Home() {
       clearTimeout(timer);
     };
   }, []);
+
+  const toggleView = () => {
+    setShowWorkflows((prev) => !prev);
+  };
 
   return (
     <>
@@ -39,15 +45,30 @@ export default function Home() {
           </a>
         </div>
 
-        {/* Globe - centered, takes up middle space */}
+        {/* Globe / Workflow Panel - centered, takes up middle space */}
         <div className="flex-1 flex items-center justify-center overflow-hidden">
           <div
-            className={`transition-all duration-1500 ease-out ${
+            className={`relative transition-all duration-1500 ease-out ${
               loaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
             }`}
             style={{ transitionDelay: "300ms" }}
           >
-            <AsciiPanel />
+            {/* Globe */}
+            <div
+              className={`transition-all duration-500 ease-out ${
+                showWorkflows ? "opacity-0 scale-95" : "opacity-100 scale-100"
+              }`}
+            >
+              <AsciiPanel onClick={toggleView} />
+            </div>
+            {/* Workflows */}
+            <div
+              className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ease-out ${
+                showWorkflows ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+              }`}
+            >
+              <WorkflowPanel onBack={toggleView} />
+            </div>
           </div>
         </div>
 
@@ -94,14 +115,29 @@ export default function Home() {
           </a>
         </div>
 
-        {/* Globe - center */}
+        {/* Globe / Workflow Panel - center */}
         <div
-          className={`transition-all duration-1500 ease-out ${
+          className={`relative transition-all duration-1500 ease-out ${
             loaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
           }`}
           style={{ transitionDelay: "300ms" }}
         >
-          <AsciiPanel />
+          {/* Globe */}
+          <div
+            className={`transition-all duration-500 ease-out ${
+              showWorkflows ? "opacity-0 scale-95" : "opacity-100 scale-100"
+            }`}
+          >
+            <AsciiPanel onClick={toggleView} />
+          </div>
+          {/* Workflows */}
+          <div
+            className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ease-out ${
+              showWorkflows ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+            }`}
+          >
+            <WorkflowPanel onBack={toggleView} />
+          </div>
         </div>
 
         {/* Location - bottom right */}

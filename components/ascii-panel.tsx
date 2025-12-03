@@ -105,9 +105,10 @@ const MAP_V2_HEIGHT = 45;
 
 interface AsciiPanelProps {
   version?: 1 | 2;
+  onClick?: () => void;
 }
 
-export function AsciiPanel({ version = 2 }: AsciiPanelProps) {
+export function AsciiPanel({ version = 2, onClick }: AsciiPanelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const timeRef = useRef<number>(0);
@@ -123,6 +124,7 @@ export function AsciiPanel({ version = 2 }: AsciiPanelProps) {
   const isDraggingRef = useRef<boolean>(false);
   const lastDragXRef = useRef<number>(0);
   const dragVelocitiesRef = useRef<number[]>([]);
+  const clickStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
 
   const cols = 100;
   const rows = 35;
@@ -257,6 +259,10 @@ export function AsciiPanel({ version = 2 }: AsciiPanelProps) {
       isDraggingRef.current = true;
       lastDragXRef.current = getClientX(e);
       dragVelocitiesRef.current = [];
+      // Track click start for detecting clicks vs drags
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      clickStartRef.current = { x: clientX, y: clientY, time: Date.now() };
     };
 
     const handleMove = (e: MouseEvent | TouchEvent) => {
@@ -289,9 +295,26 @@ export function AsciiPanel({ version = 2 }: AsciiPanelProps) {
       }
     };
 
-    const handleEnd = () => {
+    const handleEnd = (e: MouseEvent | TouchEvent) => {
       if (isDraggingRef.current) {
         isDraggingRef.current = false;
+
+        // Check if this was a click (minimal movement and short duration)
+        if (clickStartRef.current && onClick) {
+          const clientX = 'touches' in e && e.changedTouches ? e.changedTouches[0].clientX : (e as MouseEvent).clientX;
+          const clientY = 'touches' in e && e.changedTouches ? e.changedTouches[0].clientY : (e as MouseEvent).clientY;
+          const dx = Math.abs(clientX - clickStartRef.current.x);
+          const dy = Math.abs(clientY - clickStartRef.current.y);
+          const duration = Date.now() - clickStartRef.current.time;
+
+          // If movement < 5px and duration < 300ms, treat as click
+          if (dx < 5 && dy < 5 && duration < 300) {
+            onClick();
+            clickStartRef.current = null;
+            return;
+          }
+        }
+        clickStartRef.current = null;
 
         // Calculate average velocity from recent movements for smooth momentum
         const velocities = dragVelocitiesRef.current;
@@ -305,7 +328,8 @@ export function AsciiPanel({ version = 2 }: AsciiPanelProps) {
 
     const handleMouseLeave = () => {
       setMousePos(null);
-      handleEnd();
+      isDraggingRef.current = false;
+      clickStartRef.current = null;
     };
 
     // Mouse events
