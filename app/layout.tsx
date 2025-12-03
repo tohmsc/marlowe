@@ -25,7 +25,7 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Harper",
+  title: "Marlowe",
   description: "A private AI workspace for investment teams that builds and applies custom software agents to accelerate deal review and underwriting.",
   keywords: ["investment", "AI", "deal review", "underwriting", "private equity", "venture capital", "due diligence"],
 };
