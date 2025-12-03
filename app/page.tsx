@@ -20,7 +20,7 @@ export default function Home() {
   return (
     <>
       {/* Mobile Layout - vertical stack */}
-      <div className="md:hidden h-dvh bg-[#f5f4f0] overflow-hidden flex flex-col p-6 pb-16">
+      <div className="md:hidden h-dvh bg-[#f5f4f0] overflow-hidden flex flex-col p-6">
         {/* Top row: Request Access right */}
         <div className="flex justify-end items-center">
           <button
@@ -80,23 +80,23 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Bottom section: Description and Marlowe */}
-        <div className="flex flex-col items-center gap-4 text-center">
+        {/* Bottom section: Marlowe and Description */}
+        <div className="flex flex-col items-start gap-2">
           <span
-            className={`font-[family-name:var(--font-inter)] text-xs text-zinc-600 transition-all duration-1000 ease-out max-w-xs ${
+            className={`font-[family-name:var(--font-inter)] text-sm text-zinc-900 transition-all duration-1000 ease-out ${
               loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
             }`}
             style={{ transitionDelay: "600ms" }}
           >
-            AI teammates for investment teams
+            Marlowe
           </span>
           <span
-            className={`font-[family-name:var(--font-inter)] text-sm text-zinc-900 transition-all duration-1200 ease-out ${
+            className={`font-[family-name:var(--font-inter)] text-sm text-zinc-600 transition-all duration-1200 ease-out ${
               loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
             }`}
             style={{ transitionDelay: "800ms" }}
           >
-            Marlowe
+            AI teammates for investment teams
           </span>
         </div>
       </div>

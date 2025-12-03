@@ -107,14 +107,12 @@ interface AsciiPanelProps {
   version?: 1 | 2;
 }
 
-// Characters for morphing effect - from dense to sparse
-const MORPH_CHARS = "@#%&*+=-:. ";
-
 export function AsciiPanel({ version = 2 }: AsciiPanelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const timeRef = useRef<number>(0);
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+  const dprRef = useRef<number>(1);
 
   // Store displacement state for each cell (for magnetic snap-back)
   const displacementRef = useRef<Float32Array | null>(null);
@@ -131,6 +129,29 @@ export function AsciiPanel({ version = 2 }: AsciiPanelProps) {
   const charWidth = 10;
   const charHeight = 16;
   const hoverRadius = 10; // radius of hover effect in grid cells
+
+  // Set up canvas for HiDPI displays
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    dprRef.current = dpr;
+
+    // Set the canvas buffer size (actual pixels)
+    canvas.width = cols * charWidth * dpr;
+    canvas.height = rows * charHeight * dpr;
+
+    // Set the display size via CSS
+    canvas.style.width = `${cols * charWidth}px`;
+    canvas.style.height = `${rows * charHeight}px`;
+
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      // Scale the context to match DPR
+      ctx.scale(dpr, dpr);
+    }
+  }, [cols, rows, charWidth, charHeight]);
 
   // Initialize displacement array
   if (!displacementRef.current) {
@@ -347,12 +368,18 @@ export function AsciiPanel({ version = 2 }: AsciiPanelProps) {
       }
 
       const rotation = rotationRef.current;
+      const dpr = dprRef.current;
 
+      // Reset transform and clear
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Reapply DPR scale
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       // Crisp text rendering
       ctx.imageSmoothingEnabled = false;
-      ctx.font = "bold 11px monospace";
+      ctx.font = "bold 11px 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace";
       ctx.textBaseline = "top";
 
       for (let y = 0; y < rows; y++) {
@@ -426,8 +453,6 @@ export function AsciiPanel({ version = 2 }: AsciiPanelProps) {
   return (
     <canvas
       ref={canvasRef}
-      width={cols * charWidth}
-      height={rows * charHeight}
       className="block cursor-crosshair"
     />
   );
