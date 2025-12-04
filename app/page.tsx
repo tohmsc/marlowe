@@ -68,10 +68,9 @@ export default function Home() {
           </a>
         </div>
 
-        {/* Globe / Workflow Panel - center */}
-        <div className="absolute inset-0 top-20 bottom-24" style={{ zIndex: 5 }}>
-          {/* Globe - only render when not showing workflows */}
-          {!showWorkflows && (
+        {/* Globe - center */}
+        {!showWorkflows && (
+          <div className="absolute inset-0 top-20 bottom-24" style={{ zIndex: 5 }}>
             <div
               className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ease-out ${
                 loaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
@@ -106,20 +105,21 @@ export default function Home() {
                 />
               </div>
             </div>
-          )}
-          {/* Workflows */}
-          <div
-            className={`absolute inset-0 overflow-y-auto bg-[#f5f4f0] paper-texture business-card-edge-strong transition-all duration-300 ease-out ${
-              showWorkflows ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
-            }`}
-            style={{
-              transitionDelay: showWorkflows ? "200ms" : "0ms",
-              zIndex: showWorkflows ? 10 : 1
-            }}
-          >
-            <div className="min-h-full flex items-start justify-center px-6 py-6">
-              <WorkflowPanel onBack={toggleView} />
-            </div>
+          </div>
+        )}
+
+        {/* Workflows - full screen overlay on mobile */}
+        <div
+          className={`absolute inset-0 overflow-y-auto bg-[#f5f4f0] paper-texture business-card-edge-strong transition-all duration-300 ease-out ${
+            showWorkflows ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
+          }`}
+          style={{
+            transitionDelay: showWorkflows ? "200ms" : "0ms",
+            zIndex: showWorkflows ? 20 : 1
+          }}
+        >
+          <div className="min-h-full flex flex-col justify-center px-6 py-20">
+            <WorkflowPanel onBack={toggleView} />
           </div>
         </div>
 

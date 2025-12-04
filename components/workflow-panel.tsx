@@ -1,29 +1,54 @@
 "use client";
 
+import { useRef } from "react";
+
 interface WorkflowPanelProps {
   onBack?: () => void;
 }
 
 export function WorkflowPanel({ onBack }: WorkflowPanelProps) {
+  const touchStart = useRef<{ x: number; y: number; time: number } | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStart.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now()
+    };
+  };
+
   const handleTouchEnd = (e: React.TouchEvent) => {
-    // Super simple: any tap on workflows goes back to globe
-    e.preventDefault();
-    e.stopPropagation();
-    if (onBack) {
-      onBack();
+    if (!touchStart.current) return;
+
+    const touch = e.changedTouches[0];
+    const deltaX = Math.abs(touch.clientX - touchStart.current.x);
+    const deltaY = Math.abs(touch.clientY - touchStart.current.y);
+    const deltaTime = Date.now() - touchStart.current.time;
+
+    // Only trigger back on a tap (minimal movement, quick touch)
+    if (deltaX < 10 && deltaY < 10 && deltaTime < 300) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (onBack) {
+        onBack();
+      }
     }
+
+    touchStart.current = null;
   };
 
   return (
     <div className="w-full md:w-[1000px] max-w-full">
       <div
         onClick={onBack}
+        onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         className="cursor-pointer md:px-16 w-full"
       >
-        {/* Segments Title */}
+        {/* Title */}
         <h2 className="font-[family-name:var(--font-inter)] text-sm md:text-base text-zinc-900 font-medium mb-6 md:mb-8 emboss-medium">
-          Segments
+          À la carte
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 md:gap-x-24 gap-y-6 md:gap-y-10 max-w-full">
         {/* Deal Flow */}
@@ -32,10 +57,10 @@ export function WorkflowPanel({ onBack }: WorkflowPanelProps) {
             Deal Flow
           </h3>
           <ul className="font-[family-name:var(--font-inter)] text-xs md:text-[13px] text-zinc-600 space-y-1.5 md:space-y-2.5 leading-relaxed">
-            <li>Automated founder & executive vetting</li>
             <li>Auto classification by industry sector, stage and fit</li>
-            <li>Agent-generated company profiles & sponsor overviews</li>
+            <li>Automated founder & executive vetting</li>
             <li>Market labeling and competitor identification</li>
+            <li>Agent-generated company profiles & sponsor overviews</li>
           </ul>
         </section>
 
@@ -46,9 +71,9 @@ export function WorkflowPanel({ onBack }: WorkflowPanelProps) {
           </h3>
           <ul className="font-[family-name:var(--font-inter)] text-xs md:text-[13px] text-zinc-600 space-y-1.5 md:space-y-2.5 leading-relaxed">
             <li>AI research from filings & alternative data</li>
-            <li>Automated comparable analysis & benchmarking</li>
             <li>Intelligent VDR synthesis across documents</li>
             <li>AI-powered expert transcript summarization</li>
+            <li>Automated comparable analysis & benchmarking</li>
           </ul>
         </section>
 
@@ -58,11 +83,11 @@ export function WorkflowPanel({ onBack }: WorkflowPanelProps) {
             Execution
           </h3>
           <ul className="font-[family-name:var(--font-inter)] text-xs md:text-[13px] text-zinc-600 space-y-1.5 md:space-y-2.5 leading-relaxed">
-            <li>AI-assisted IC memo drafting</li>
-            <li>Automated portfolio monitoring</li>
             <li>Agent-prepared meeting prep & briefing materials</li>
+            <li>AI-assisted IC memo drafting</li>
             <li>Intelligent presentation review & versioning</li>
             <li>Automated email & meeting sync</li>
+            <li>Automated portfolio monitoring</li>
           </ul>
         </section>
 
