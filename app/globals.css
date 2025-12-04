@@ -46,7 +46,7 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0rem; /* Hard edges like a business card */
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -124,5 +124,110 @@
     overflow: hidden;
     height: 100%;
     height: 100dvh;
+  }
+}
+
+@layer utilities {
+  /* Paper texture - linen finish for business card feel */
+  .paper-texture {
+    background-image:
+      /* Subtle center spotlight */
+      radial-gradient(
+        ellipse at center,
+        rgba(255, 255, 255, 0.15) 0%,
+        rgba(255, 255, 255, 0.08) 30%,
+        transparent 60%
+      ),
+      /* Horizontal fibers */
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.015) 2px,
+        rgba(0, 0, 0, 0.015) 3px
+      ),
+      /* Vertical fibers */
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.012) 2px,
+        rgba(0, 0, 0, 0.012) 3px
+      ),
+      /* Fine grain noise */
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.12'/%3E%3C/svg%3E");
+  }
+
+  /* Embossed text effects - light from top-left */
+  .emboss-brand {
+    text-shadow:
+      0.8px 0.8px 1.5px rgba(255, 255, 255, 0.8),
+      -0.8px -0.8px 1.5px rgba(0, 0, 0, 0.18),
+      0px 1.5px 3px rgba(0, 0, 0, 0.09);
+    letter-spacing: 0.012em;
+  }
+
+  .emboss-medium {
+    text-shadow:
+      1px 1px 1.5px rgba(255, 255, 255, 0.8),
+      -1px -1px 1.5px rgba(0, 0, 0, 0.2),
+      0px 2px 3px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.01em;
+  }
+
+  .emboss-subtle {
+    text-shadow:
+      0.8px 0.8px 1.2px rgba(255, 255, 255, 0.7),
+      -0.8px -0.8px 1.2px rgba(0, 0, 0, 0.15),
+      0px 1.5px 2px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Hover state - slightly less pronounced on interactive elements */
+  .emboss-interactive:hover {
+    text-shadow:
+      0.6px 0.6px 1px rgba(255, 255, 255, 0.7),
+      -0.6px -0.6px 1px rgba(0, 0, 0, 0.15),
+      0px 1.5px 2.5px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Business card edges - Goldman Sachs inspired */
+  .business-card-edge {
+    /* Hard edge with very subtle beveled border */
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow:
+      /* Top-left highlight (light catching the beveled edge) */
+      inset 1px 1px 0px rgba(255, 255, 255, 0.9),
+      /* Bottom-right shadow (depth of card stock) */
+      inset -1px -1px 0px rgba(0, 0, 0, 0.05),
+      /* Outer micro-bevel */
+      0 0 0 0.5px rgba(255, 255, 255, 0.5),
+      /* Subtle lift shadow */
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      /* Depth shadow for card thickness */
+      0 2px 4px rgba(0, 0, 0, 0.02);
+  }
+
+  /* Pronounced version for main container */
+  .business-card-edge-strong {
+    border: 1.5px solid rgba(0, 0, 0, 0.1);
+    box-shadow:
+      /* Top-left highlight */
+      inset 1.5px 1.5px 0px rgba(255, 255, 255, 0.95),
+      /* Bottom-right shadow */
+      inset -1.5px -1.5px 0px rgba(0, 0, 0, 0.08),
+      /* Outer highlight */
+      0 0 0 1px rgba(255, 255, 255, 0.6),
+      /* Card thickness shadow */
+      0 2px 3px rgba(0, 0, 0, 0.05),
+      0 4px 8px rgba(0, 0, 0, 0.03);
+  }
+
+  /* Subtle version for components */
+  .business-card-edge-subtle {
+    border: 0.5px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+      inset 0.5px 0.5px 0px rgba(255, 255, 255, 0.8),
+      inset -0.5px -0.5px 0px rgba(0, 0, 0, 0.03),
+      0 1px 2px rgba(0, 0, 0, 0.02);
   }
 }

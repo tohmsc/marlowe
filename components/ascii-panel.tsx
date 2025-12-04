@@ -156,7 +156,7 @@ export function AsciiPanel({ version = 2, onClick }: AsciiPanelProps) {
   }, [cols, rows, charWidth, charHeight]);
 
   // Initialize displacement array
-  if (!displacementRef.current) {
+  if (displacementRef.current == null) {
     displacementRef.current = new Float32Array(cols * rows * 2); // x, y displacement for each cell
   }
 
@@ -251,31 +251,54 @@ export function AsciiPanel({ version = 2, onClick }: AsciiPanelProps) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Detect if this is a mobile device
+    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
     const getClientX = (e: MouseEvent | TouchEvent): number => {
       return 'touches' in e ? e.touches[0].clientX : e.clientX;
     };
 
+    // Track whether mouse is currently over the canvas
+    const isHoveringRef = { current: false };
+
+    const handleMouseEnter = () => {
+      isHoveringRef.current = true;
+    };
+
+    const handleMouseLeaveCanvas = () => {
+      isHoveringRef.current = false;
+    };
+
     const handleStart = (e: MouseEvent | TouchEvent) => {
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+      // On mobile, just track for click detection, don't start dragging
+      if (isMobile && 'touches' in e) {
+        clickStartRef.current = { x: clientX, y: clientY, time: Date.now() };
+        return;
+      }
+
+      // Desktop: enable drag-to-spin
       isDraggingRef.current = true;
       lastDragXRef.current = getClientX(e);
       dragVelocitiesRef.current = [];
-      // Track click start for detecting clicks vs drags
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
       clickStartRef.current = { x: clientX, y: clientY, time: Date.now() };
     };
 
     const handleMove = (e: MouseEvent | TouchEvent) => {
-      // Update hover position for particle effect
-      const rect = canvas.getBoundingClientRect();
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-      const x = Math.floor((clientX - rect.left) / charWidth);
-      const y = Math.floor((clientY - rect.top) / charHeight);
-      setMousePos({ x, y });
+      // Update hover position for particle effect (desktop only)
+      if (!isMobile || !('touches' in e)) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+        const x = Math.floor((clientX - rect.left) / charWidth);
+        const y = Math.floor((clientY - rect.top) / charHeight);
+        setMousePos({ x, y });
+      }
 
-      // Handle drag for spinning
-      if (isDraggingRef.current) {
+      // Handle drag for spinning (desktop only)
+      if (isDraggingRef.current && !isMobile) {
         const currentX = getClientX(e);
         const deltaX = currentX - lastDragXRef.current;
 
@@ -296,19 +319,35 @@ export function AsciiPanel({ version = 2, onClick }: AsciiPanelProps) {
     };
 
     const handleEnd = (e: MouseEvent | TouchEvent) => {
+      // Mobile: simple tap detection - any touch that ends quickly is a tap
+      if (isMobile && 'changedTouches' in e && clickStartRef.current && onClick) {
+        const clientX = e.changedTouches[0].clientX;
+        const clientY = e.changedTouches[0].clientY;
+        const dx = Math.abs(clientX - clickStartRef.current.x);
+        const dy = Math.abs(clientY - clickStartRef.current.y);
+        const duration = Date.now() - clickStartRef.current.time;
+
+        // Very forgiving: treat anything under 50px movement and 1 second as a tap
+        if (dx < 50 && dy < 50 && duration < 1000) {
+          onClick();
+        }
+        clickStartRef.current = null;
+        return;
+      }
+
+      // Desktop: handle drag-to-spin
       if (isDraggingRef.current) {
         isDraggingRef.current = false;
 
         // Check if this was a click (minimal movement and short duration)
         if (clickStartRef.current && onClick) {
-          const clientX = 'touches' in e && e.changedTouches ? e.changedTouches[0].clientX : (e as MouseEvent).clientX;
-          const clientY = 'touches' in e && e.changedTouches ? e.changedTouches[0].clientY : (e as MouseEvent).clientY;
+          const clientX = (e as MouseEvent).clientX;
+          const clientY = (e as MouseEvent).clientY;
           const dx = Math.abs(clientX - clickStartRef.current.x);
           const dy = Math.abs(clientY - clickStartRef.current.y);
           const duration = Date.now() - clickStartRef.current.time;
 
-          // If movement < 5px and duration < 300ms, treat as click
-          if (dx < 5 && dy < 5 && duration < 300) {
+          if (dx < 10 && dy < 10 && duration < 500) {
             onClick();
             clickStartRef.current = null;
             return;
@@ -330,13 +369,37 @@ export function AsciiPanel({ version = 2, onClick }: AsciiPanelProps) {
       setMousePos(null);
       isDraggingRef.current = false;
       clickStartRef.current = null;
+      isHoveringRef.current = false;
+    };
+
+    // Handle scroll wheel to spin the globe when hovering
+    const handleWheel = (e: WheelEvent) => {
+      // Only spin if hovering over the canvas
+      if (isHoveringRef.current) {
+        e.preventDefault();
+
+        // Convert scroll delta to rotation velocity
+        // deltaY is positive when scrolling down, negative when scrolling up
+        // Scale it appropriately for smooth spinning
+        const scrollSensitivity = 0.001;
+        const scrollDelta = e.deltaY * scrollSensitivity;
+
+        // Add to current velocity for smooth acceleration
+        velocityRef.current += scrollDelta;
+
+        // Clamp velocity to prevent it from getting too fast
+        const maxVelocity = 0.05;
+        velocityRef.current = Math.max(-maxVelocity, Math.min(maxVelocity, velocityRef.current));
+      }
     };
 
     // Mouse events
+    canvas.addEventListener("mouseenter", handleMouseEnter);
+    canvas.addEventListener("mouseleave", handleMouseLeave);
     canvas.addEventListener("mousedown", handleStart);
     canvas.addEventListener("mousemove", handleMove);
     canvas.addEventListener("mouseup", handleEnd);
-    canvas.addEventListener("mouseleave", handleMouseLeave);
+    canvas.addEventListener("wheel", handleWheel, { passive: false });
 
     // Touch events
     canvas.addEventListener("touchstart", handleStart, { passive: true });
@@ -344,15 +407,17 @@ export function AsciiPanel({ version = 2, onClick }: AsciiPanelProps) {
     canvas.addEventListener("touchend", handleEnd);
 
     return () => {
+      canvas.removeEventListener("mouseenter", handleMouseEnter);
+      canvas.removeEventListener("mouseleave", handleMouseLeave);
       canvas.removeEventListener("mousedown", handleStart);
       canvas.removeEventListener("mousemove", handleMove);
       canvas.removeEventListener("mouseup", handleEnd);
-      canvas.removeEventListener("mouseleave", handleMouseLeave);
+      canvas.removeEventListener("wheel", handleWheel);
       canvas.removeEventListener("touchstart", handleStart);
       canvas.removeEventListener("touchmove", handleMove);
       canvas.removeEventListener("touchend", handleEnd);
     };
-  }, [charWidth, charHeight]);
+  }, [charWidth, charHeight, onClick]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -477,7 +542,8 @@ export function AsciiPanel({ version = 2, onClick }: AsciiPanelProps) {
   return (
     <canvas
       ref={canvasRef}
-      className="block cursor-crosshair"
+      className="block cursor-crosshair touch-none"
+      style={{ touchAction: 'none' }}
     />
   );
 }
