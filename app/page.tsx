@@ -81,8 +81,8 @@ export default function Home() {
           <img
             src="/icon.svg"
             alt="Marlowe"
-            className={`w-8 h-8 mb-1 transition-all duration-300 ease-out ${
-              showLogo ? "opacity-40" : "opacity-0"
+            className={`w-8 h-8 mb-1 transition-all duration-1000 ease-out ${
+              showLogo ? "opacity-100" : "opacity-0"
             }`}
           />
           <span
@@ -118,7 +118,7 @@ export default function Home() {
             src="/icon.svg"
             alt="Marlowe"
             className={`w-8 h-8 transition-all duration-1000 ease-out ${
-              showLogo ? "opacity-40" : logoFadedOut ? "opacity-0" : loaded ? "opacity-40" : "opacity-0"
+              showLogo ? "opacity-100" : logoFadedOut ? "opacity-0" : loaded ? "opacity-100" : "opacity-0"
             }`}
             style={{ transitionDelay: showLogo ? "0ms" : logoFadedOut ? "0ms" : "1600ms" }}
           />
