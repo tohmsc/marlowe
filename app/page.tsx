@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { AsciiPanel } from "@/components/ascii-panel";
 import { WorkflowPanel } from "@/components/workflow-panel";
 
+const CONTACT_URL = process.env.NEXT_PUBLIC_CONTACT_URL || "#";
+
 export default function Home() {
   const [loaded, setLoaded] = useState(false);
   const [showWorkflows, setShowWorkflows] = useState(false);
@@ -24,7 +26,6 @@ export default function Home() {
   }, []);
 
   const toggleView = () => {
-    console.log("toggleView called, current showWorkflows:", showWorkflows);
     setShowWorkflows((prev) => !prev);
   };
 
@@ -51,7 +52,7 @@ export default function Home() {
         {/* Contact - top right */}
         <div className="absolute top-6 right-6 z-10 pointer-events-none">
           <a
-            href="https://cal.com/lets-meet/"
+            href={CONTACT_URL}
             target="_blank"
             rel="noopener noreferrer"
             className={`font-[family-name:var(--font-inter)] text-sm text-zinc-900 hover:text-zinc-600 cursor-pointer emboss-medium emboss-interactive pointer-events-auto ${
@@ -151,14 +152,8 @@ export default function Home() {
         {/* Logo and Wordmark - top left */}
         <div
           className="absolute top-12 left-12 flex items-center gap-2"
-          onMouseEnter={() => {
-            console.log('Hovering!');
-            setShowLogo(true);
-          }}
-          onMouseLeave={() => {
-            console.log('Left hover');
-            setShowLogo(false);
-          }}
+          onMouseEnter={() => setShowLogo(true)}
+          onMouseLeave={() => setShowLogo(false)}
         >
           <img
             src="/icon.svg"
@@ -189,7 +184,7 @@ export default function Home() {
         {/* Contact - top right */}
         <div className="absolute top-12 right-12 flex items-center h-8">
           <a
-            href="https://cal.com/lets-meet/"
+            href={CONTACT_URL}
             target="_blank"
             rel="noopener noreferrer"
             className={`font-[family-name:var(--font-inter)] text-sm text-zinc-900 hover:text-zinc-600 cursor-pointer emboss-medium emboss-interactive ${
